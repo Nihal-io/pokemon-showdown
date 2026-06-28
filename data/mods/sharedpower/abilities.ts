@@ -80,7 +80,7 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 		onEmergencyExit(target) {
 			if (!this.canSwitch(target.side) || target.forceSwitchFlag || target.switchFlag) return;
 
-			// This guard is there to prevent infinte forced switches caused by wimpout/Emergency Exit and regenerator
+			// This guard is there to prevent infinite forced switches caused by Wimp Out/Emergency Exit and Regenerator
 			// The idea is to store the state of the side everytime this ability is triggered and check if the same state was reached previously
 			// Since the simulator is a deterministic state machine, if the same state is reached previously, then the same actions taken will lead to same outcome
 			// It returns prematurely if the same state is reached previously and auto clears itself each turn
