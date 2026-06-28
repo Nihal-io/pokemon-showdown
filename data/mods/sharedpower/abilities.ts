@@ -75,4 +75,70 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 			}
 		},
 	},
+	wimpout: {
+		inherit: true,
+		onEmergencyExit(target) {
+			if (!this.canSwitch(target.side) || target.forceSwitchFlag || target.switchFlag) return;
+
+			// This guard is there to prevent infinte forced switches caused by wimpout/Emergency Exit and regenerator
+			// The idea is to store the state of the side everytime this ability is triggered and check if the same state was reached previously
+			// Since the simulator is a deterministic state machine, if the same state is reached previously, then the same actions taken will lead to same outcome
+			// It returns prematurely if the same state is reached previously and auto clears itself each turn
+			const side = target.side as any;
+			if (!side.visitedStates || side.visitedStatesTurn !== this.turn) {
+				side.visitedStates = new Set();
+				side.visitedStatesTurn = this.turn;
+			}
+			const state = this.sides.map(s => {
+				for (const [i, mon] of s.pokemon.entries()) {
+					if (mon.m.loopKey === undefined) mon.m.loopKey = i;
+				}
+				return s.pokemon
+					.map(p => `${p.m.loopKey}:${p.hp}:${s.active.includes(p) ? 1 : 0}`)
+					.sort()
+					.join(',');
+			}).join('|');
+			if (side.visitedStates.has(state)) { return; }
+			side.visitedStates.add(state);
+
+			for (const otherside of this.sides) {
+				for (const active of otherside.active) {
+					active.switchFlag = false;
+				}
+			}
+			target.switchFlag = true;
+			this.add('-activate', target, 'ability: Wimp Out');
+		},
+	},
+	emergencyexit: {
+		inherit: true,
+		onEmergencyExit(target) {
+			if (!this.canSwitch(target.side) || target.forceSwitchFlag || target.switchFlag) return;
+
+			const side = target.side as any;
+			if (!side.visitedStates || side.visitedStatesTurn !== this.turn) {
+				side.visitedStates = new Set();
+				side.visitedStatesTurn = this.turn;
+			}
+			const state = this.sides.map(s => {
+				for (const [i, mon] of s.pokemon.entries()) {
+					if (mon.m.loopKey === undefined) mon.m.loopKey = i;
+				}
+				return s.pokemon
+					.map(p => `${p.m.loopKey}:${p.hp}:${s.active.includes(p) ? 1 : 0}`)
+					.sort()
+					.join(',');
+			}).join('|');
+
+			if (side.visitedStates.has(state)) { return; }
+			side.visitedStates.add(state);
+			for (const otherside of this.sides) {
+				for (const active of otherside.active) {
+					active.switchFlag = false;
+				}
+			}
+			target.switchFlag = true;
+			this.add('-activate', target, 'ability: Emergency Exit');
+		},
+	},
 };
